@@ -1,0 +1,134 @@
+/* Container styles */
+.floating-dock-desktop {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  border-radius: 1rem;
+  background-color: var(--bg-elevated);
+  padding-bottom: 0.75rem;
+  padding-top: 0.75rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(10px);
+}
+
+.dock-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  cursor: none; /* using our custom cursor */
+  border: 1px solid var(--border-medium);
+  transition: background-color 0.2s, border-color 0.2s;
+  color: var(--text-secondary);
+}
+
+.dock-item a {
+  cursor: none;
+}
+
+.dock-item:hover {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+.dock-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.dock-item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dock-item-tooltip {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  border: 1px solid var(--border-subtle);
+  pointer-events: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-body);
+}
+
+.floating-dock-mobile {
+  display: none;
+  position: relative;
+}
+
+.mobile-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 50%;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: none;
+}
+
+.mobile-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobile-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 50%;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.mobile-item:hover {
+  color: var(--accent-primary);
+}
+
+.mobile-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.mobile-item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive visibility */
+@media (max-width: 768px) {
+  .floating-dock-desktop {
+    display: none;
+  }
+  .floating-dock-mobile {
+    display: block;
+  }
+}

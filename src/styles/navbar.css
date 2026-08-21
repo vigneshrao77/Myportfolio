@@ -1,0 +1,14 @@
+.navbar-floating-dock-container {
+  position: fixed;
+  top: 2rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none; /* Let clicks pass through empty space */
+}
+
+.navbar-floating-dock-container > * {
+  pointer-events: auto; /* Enable clicks on the dock itself */
+}

@@ -1,0 +1,275 @@
+/* =========================
+   ABOUT SECTION
+========================= */
+
+.about-section {
+  padding: 120px 0;
+  position: relative;
+}
+
+.about-container {
+  position: relative;
+  z-index: 1;
+}
+
+.about-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 80px;
+  margin-top: 60px;
+}
+
+/* =========================
+   TYPOGRAPHY
+========================= */
+
+.about-intro {
+  font-size: 1.8rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 40px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.about-description {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 600px;
+}
+
+/* =========================
+   STATS LIST (Typographic & Animated)
+========================= */
+
+.about-stats-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-line {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stat-divider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--border-medium);
+  transform-origin: left center;
+}
+
+/* Bottom divider for the last item */
+.stat-line:last-child::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--border-medium);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.about-stats-column:hover .stat-line:last-child::after {
+  /* optional effect */
+}
+
+.stat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  transition: color 0.4s ease;
+}
+
+.stat-value {
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: color 0.4s ease, text-shadow 0.4s ease;
+}
+
+/* Hover Micro-interactions */
+.stat-line:hover .stat-content {
+  transform: translateY(-4px);
+}
+
+.stat-line:hover .stat-label {
+  color: var(--accent-primary);
+}
+
+.stat-line:hover .stat-value {
+  color: #ffffff;
+  text-shadow: 0 0 15px rgba(201, 161, 90, 0.4);
+}
+
+/* Subtle glow behind the hovered row */
+.stat-line::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(201, 161, 90, 0.05) 0%, rgba(201, 161, 90, 0) 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.stat-line:hover::before {
+  opacity: 1;
+}
+
+/* =========================
+   CINEMATIC ANAMORPHIC GLOW
+========================= */
+
+.cinematic-glow-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0; /* Above WebGL canvas, below text container */
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+/* Core central bright light */
+.glow-core {
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.25) 0%, rgba(255, 179, 71, 0.15) 15%, rgba(255, 122, 26, 0.05) 40%, transparent 70%);
+  filter: blur(20px);
+  animation: glowPulse 4s ease-in-out infinite alternate;
+}
+
+/* Anamorphic wide horizontal ray */
+.glow-anamorphic-ray {
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  transform: translate(-50%, -50%) scaleX(2.5) scaleY(0.08);
+  width: 1000px;
+  height: 1000px;
+  background: radial-gradient(circle, rgba(255, 230, 200, 0.4) 0%, rgba(255, 122, 26, 0.2) 20%, transparent 60%);
+  filter: blur(20px);
+  animation: glowPulse 4s ease-in-out infinite alternate 0.5s;
+}
+
+/* Volumetric angled beams */
+.glow-beam {
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  width: 800px;
+  height: 100px;
+  background: linear-gradient(90deg, rgba(255, 179, 71, 0.15) 0%, transparent 100%);
+  filter: blur(25px);
+  transform-origin: left center;
+  opacity: 0.7;
+}
+
+.beam-left {
+  transform: translate(-50%, -50%) rotate(-15deg);
+  animation: beamDrift 6s ease-in-out infinite alternate;
+}
+
+.beam-right {
+  transform: translate(-50%, -50%) rotate(15deg);
+  animation: beamDrift 7s ease-in-out infinite alternate 1s;
+}
+
+/* Vignette to dim the edges and maintain readability */
+.glow-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 40%, rgba(18, 20, 26, 0.7) 100%);
+  z-index: 1; /* On top of the glow layers */
+  mix-blend-mode: normal;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .glow-core {
+    left: 50%;
+    width: 400px;
+    height: 400px;
+  }
+  .glow-anamorphic-ray {
+    left: 50%;
+    width: 600px;
+    transform: translate(-50%, -50%) scaleX(2) scaleY(0.1);
+  }
+  .glow-beam {
+    left: 50%;
+    width: 500px;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes glowPulse {
+  0% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+@keyframes beamDrift {
+  0% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 968px) {
+  .about-content {
+    grid-template-columns: 1fr;
+    gap: 60px;
+  }
+}

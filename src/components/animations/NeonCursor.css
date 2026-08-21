@@ -1,0 +1,62 @@
+.neon-cursor-container {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+}
+
+.cursor-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  margin-left: -4px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 15px rgba(201, 161, 90, 0.6);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.cursor-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  box-sizing: border-box;
+}
+
+.cursor-ring-1 {
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  border: 1.5px solid rgba(255, 239, 166, 0.9);
+  box-shadow: 0 0 6px rgba(255, 239, 166, 0.2);
+}
+
+.cursor-ring-2 {
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  margin-left: -18px;
+  border: 2px solid rgba(255, 215, 0, 0.75);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.cursor-ring-3 {
+  width: 52px;
+  height: 52px;
+  margin-top: -26px;
+  margin-left: -26px;
+  border: 1.5px solid rgba(201, 161, 90, 0.5);
+  box-shadow: 0 0 14px rgba(201, 161, 90, 0.15);
+}
+
