@@ -1,6 +1,5 @@
 import React from 'react';
 import AnimatedHeading from '../components/animations/AnimatedHeading';
-import CursorGrid from '../components/animations/CursorGrid';
 import { TiltCard } from '@/components/ui/3d-tilt-card';
 import '../styles/skills.css';
 
@@ -17,24 +16,6 @@ const Skills = () => {
 
   return (
     <section id="skills" className="skills-section" style={{ position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-        <CursorGrid
-          cellSize={70}
-          color="#FFD700"
-          radius={140}
-          falloff="smooth"
-          holdTime={400}
-          fadeDuration={800}
-          lineWidth={1.2}
-          maxOpacity={1}
-          fillOpacity={0}
-          gridOpacity={0}
-          cellRadius={0}
-          clickPulse
-          pulseSpeed={600}
-        />
-      </div>
-      
       <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         <AnimatedHeading as="h2" className="section-title" text="Technical Expertise" />
 

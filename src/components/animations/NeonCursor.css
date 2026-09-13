@@ -58,5 +58,11 @@
   margin-left: -26px;
   border: 1.5px solid rgba(201, 161, 90, 0.5);
   box-shadow: 0 0 14px rgba(201, 161, 90, 0.15);
+  transform-origin: center center;
+}
+
+.cursor-ring-3.is-magnetized {
+  border-width: 2px;
+  backdrop-filter: blur(0.5px);
 }
 

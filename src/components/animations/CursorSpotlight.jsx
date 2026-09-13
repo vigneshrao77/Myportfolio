@@ -8,8 +8,8 @@ export default function CursorSpotlight() {
   const cursorX = useMotionValue(-1000);
   const cursorY = useMotionValue(-1000);
 
-  // Soft inertia physics
-  const springConfig = { damping: 25, stiffness: 120, mass: 0.5 };
+  // Responsive soft inertia physics
+  const springConfig = { damping: 28, stiffness: 280, mass: 0.28 };
   const smoothX = useSpring(cursorX, springConfig);
   const smoothY = useSpring(cursorY, springConfig);
 
@@ -17,9 +17,16 @@ export default function CursorSpotlight() {
     if (shouldReduceMotion) return;
 
     const moveCursor = (e) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      if (!isVisible) setIsVisible(true);
+      if (!isVisible) {
+        cursorX.set(e.clientX);
+        cursorY.set(e.clientY);
+        smoothX.jump?.(e.clientX);
+        smoothY.jump?.(e.clientY);
+        setIsVisible(true);
+      } else {
+        cursorX.set(e.clientX);
+        cursorY.set(e.clientY);
+      }
     };
 
     const handleMouseOut = () => setIsVisible(false);

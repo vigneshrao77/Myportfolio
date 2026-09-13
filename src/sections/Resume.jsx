@@ -3,30 +3,17 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import AnimatedHeading from "../components/animations/AnimatedHeading";
 import { StaggerReveal, StaggerItem } from "../components/animations/StaggerReveal";
-import MagneticButton from "../components/animations/MagneticButton";
 import "../styles/resume.css";
 import DotField from "../components/animations/DotField";
+import AnimatedDownloadButton from "../components/ui/AnimatedDownloadButton";
 
 const Resume = () => {
-  const [downloadState, setDownloadState] = useState("idle"); // idle, downloading, downloaded
   const shouldReduceMotion = useReducedMotion();
   const sectionRef = useRef(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const handleDownload = () => {
-    if (downloadState !== "idle") return;
-    setDownloadState("downloading");
-    
-    // Simulate download delay for interaction feedback
-    setTimeout(() => {
-      setDownloadState("downloaded");
-      window.open('/resume.pdf?v=2', '_blank');
-      
-      // Revert after showing checkmark
-      setTimeout(() => {
-        setDownloadState("idle");
-      }, 2000);
-    }, 800);
+    window.open('/resume.pdf?v=2', '_blank');
   };
 
   const handleMouseMove = (e) => {
@@ -96,28 +83,7 @@ const Resume = () => {
             </StaggerItem>
 
             <StaggerItem>
-              <motion.button 
-                className="resume-download-btn"
-                onClick={handleDownload}
-                whileHover={{ scale: shouldReduceMotion ? 1 : 1.02, y: shouldReduceMotion ? 0 : -3 }}
-                whileTap={{ scale: shouldReduceMotion ? 1 : 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              >
-                <div className="resume-download-bg" />
-                <span className="resume-download-content">
-                  {downloadState === "idle" && "Download Resume"}
-                  {downloadState === "downloading" && "Downloading..."}
-                  {downloadState === "downloaded" && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                      Downloaded
-                    </span>
-                  )}
-                </span>
-                <div className="resume-download-border" />
-              </motion.button>
+              <AnimatedDownloadButton onDownload={handleDownload} />
             </StaggerItem>
           </StaggerReveal>
         </div>

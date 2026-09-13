@@ -39,6 +39,7 @@ const FloatingDockMobile = ({ items, className = "" }) => {
                 <a
                   href={item.href}
                   className="mobile-item"
+                  data-magnetic="true"
                   onClick={() => setOpen(false)}
                 >
                   <div className="mobile-item-icon">{item.icon}</div>
@@ -51,6 +52,7 @@ const FloatingDockMobile = ({ items, className = "" }) => {
       <button
         onClick={() => setOpen(!open)}
         className="mobile-toggle"
+        data-magnetic="true"
       >
         <div className="toggle-icon">
            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -62,25 +64,38 @@ const FloatingDockMobile = ({ items, className = "" }) => {
 
 const FloatingDockDesktop = ({ items, className = "" }) => {
   let mouseX = useMotionValue(Infinity);
+  let mouseY = useMotionValue(Infinity);
+
   return (
     <motion.div
-      onMouseMove={(e) => mouseX.set(e.pageX)}
-      onMouseLeave={() => mouseX.set(Infinity)}
+      onMouseMove={(e) => {
+        mouseX.set(e.clientX);
+        mouseY.set(e.clientY);
+      }}
+      onMouseLeave={() => {
+        mouseX.set(Infinity);
+        mouseY.set(Infinity);
+      }}
       className={`floating-dock-desktop ${className}`}
     >
       {items.map((item) => (
-        <IconContainer mouseX={mouseX} key={item.title} {...item} />
+        <IconContainer mouseX={mouseX} mouseY={mouseY} key={item.title} {...item} />
       ))}
     </motion.div>
   );
 };
 
-function IconContainer({ mouseX, title, icon, href }) {
+function IconContainer({ mouseX, mouseY, title, icon, href }) {
   let ref = React.useRef(null);
 
   let distance = useTransform(mouseX, (val) => {
     let bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
+  });
+
+  let distanceY = useTransform(mouseY, (val) => {
+    let bounds = ref.current?.getBoundingClientRect() ?? { y: 0, height: 0 };
+    return val - bounds.y - bounds.height / 2;
   });
 
   let widthTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
@@ -89,11 +104,25 @@ function IconContainer({ mouseX, title, icon, href }) {
   let widthTransformIcon = useTransform(distance, [-150, 0, 150], [20, 40, 20]);
   let heightTransformIcon = useTransform(distance, [-150, 0, 150], [20, 40, 20]);
 
+  // Magnetic displacement of the button toward the cursor
+  let magXTransform = useTransform(distance, (val) => {
+    if (!isFinite(val) || Math.abs(val) > 120) return 0;
+    return (val / 120) * 10;
+  });
+
+  let magYTransform = useTransform(distanceY, (val) => {
+    if (!isFinite(val) || Math.abs(val) > 100) return 0;
+    return (val / 100) * 8;
+  });
+
   let width = useSpring(widthTransform, { mass: 0.1, stiffness: 150, damping: 12 });
   let height = useSpring(heightTransform, { mass: 0.1, stiffness: 150, damping: 12 });
 
   let widthIcon = useSpring(widthTransformIcon, { mass: 0.1, stiffness: 150, damping: 12 });
   let heightIcon = useSpring(heightTransformIcon, { mass: 0.1, stiffness: 150, damping: 12 });
+
+  let magX = useSpring(magXTransform, { mass: 0.1, stiffness: 260, damping: 18 });
+  let magY = useSpring(magYTransform, { mass: 0.1, stiffness: 260, damping: 18 });
 
   const [hovered, setHovered] = useState(false);
 
@@ -101,7 +130,8 @@ function IconContainer({ mouseX, title, icon, href }) {
     <a href={href}>
       <motion.div
         ref={ref}
-        style={{ width, height }}
+        data-magnetic="true"
+        style={{ width, height, x: magX, y: magY }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         className="dock-item"
