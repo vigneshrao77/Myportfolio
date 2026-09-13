@@ -22,7 +22,7 @@ export default function AnimatedHeading({ text, as: Tag = 'h2', className = '', 
 
   return (
     <Tag className={className} {...props}>
-      <span style={{ overflow: 'hidden', display: 'inline' }}>
+      <span style={{ overflow: 'hidden', display: 'inline', paddingRight: '0.15em' }}>
         <motion.span
           style={{ display: 'inline-block' }}
           variants={container}
@@ -31,7 +31,7 @@ export default function AnimatedHeading({ text, as: Tag = 'h2', className = '', 
           viewport={{ once: true, amount: 0.6 }}
         >
           {words.map((w, i) => (
-            <span key={i} style={{ display: 'inline-block', overflow: 'hidden', marginRight: '0.28em' }}>
+            <span key={i} style={{ display: 'inline-block', overflow: 'hidden', paddingRight: '0.15em', marginRight: '0.13em' }}>
               <motion.span style={{ display: 'inline-block' }} variants={word}>
                 {w}
               </motion.span>
