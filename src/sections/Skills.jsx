@@ -8,9 +8,9 @@ const Skills = () => {
     { title: 'Programming Languages', items: ['Java', 'C', 'C++', 'JavaScript', 'Python'] },
     { title: 'Frontend Development', items: ['HTML', 'CSS', 'Bootstrap', 'ReactJS'] },
     { title: 'Backend Development', items: ['Node.js', 'Express.js', 'REST APIs'] },
-    { title: 'Databases', items: ['MongoDB', 'Oracle SQL'] },
+    { title: 'Databases', items: ['MongoDB', 'Oracle SQL', 'PostgreSQL', 'Supabase'] },
     { title: 'CS Fundamentals', items: ['Data Structures and Algorithms', 'OOP Concepts', 'DBMS'] },
-    { title: 'Tools & Platforms', items: ['Git', 'GitHub', 'Figma', 'REST Client', 'Anaconda', 'n8n'] },
+    { title: 'Tools & Platforms', items: ['Git', 'GitHub', 'Figma', 'REST Client', 'Anaconda', 'n8n', 'Notion'] },
     { title: 'AI / LLM Frameworks', items: ['LangChain', 'LangGraph', 'LangSmith'] }
   ];
 

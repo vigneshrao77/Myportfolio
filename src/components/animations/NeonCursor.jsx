@@ -12,6 +12,8 @@ const NeonCursor = () => {
   const mousePosRef = useRef({ x: -100, y: -100 });
   const isClickingRef = useRef(false);
   const isHoveringRef = useRef(false);
+  const lastMagneticUpdate = useRef(0);
+  const magneticTimeoutRef = useRef(null);
 
   // Raw mouse coordinates initialized offscreen
   const cursorX = useMotionValue(-100);
@@ -45,100 +47,115 @@ const NeonCursor = () => {
     cursorX.set(clientX);
     cursorY.set(clientY);
 
-    // Restrict magnetic attraction strictly to header buttons (floating dock navigation items)
-    const headerMagneticSelector = '.dock-item, .mobile-item, .mobile-toggle, .navbar-floating-dock-container [data-magnetic="true"]';
-    const candidates = document.querySelectorAll(headerMagneticSelector);
+    const performMagneticCheck = () => {
+      lastMagneticUpdate.current = performance.now();
+      const currentX = mousePosRef.current.x;
+      const currentY = mousePosRef.current.y;
 
-    let bestTarget = null;
-    let closestDist = Infinity;
-    let closestRect = null;
-    let closestBtnRadius = 0;
+      // Restrict magnetic attraction strictly to header buttons (floating dock navigation items)
+      const headerMagneticSelector = '.dock-item, .mobile-item, .mobile-toggle, .navbar-floating-dock-container [data-magnetic="true"]';
+      const candidates = document.querySelectorAll(headerMagneticSelector);
 
-    // 1. Direct hit check under cursor
-    const directHit = document.elementFromPoint(clientX, clientY);
-    const directTarget = directHit?.closest?.(headerMagneticSelector);
+      let bestTarget = null;
+      let closestDist = Infinity;
+      let closestRect = null;
+      let closestBtnRadius = 0;
 
-    if (directTarget) {
-      const rect = directTarget.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        bestTarget = directTarget;
-        closestRect = rect;
-        closestBtnRadius = Math.max(rect.width, rect.height) / 2;
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        closestDist = Math.hypot(cx - clientX, cy - clientY);
-      }
-    }
+      // 1. Direct hit check under cursor
+      const directHit = document.elementFromPoint(currentX, currentY);
+      const directTarget = directHit?.closest?.(headerMagneticSelector);
 
-    // 2. Proximity check across visible candidates (e.g. gaps between dock icons or approaching buttons)
-    if (!bestTarget) {
-      for (let i = 0; i < candidates.length; i++) {
-        const el = candidates[i];
-        const rect = el.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) continue;
-        if (
-          rect.bottom < -20 ||
-          rect.top > window.innerHeight + 20 ||
-          rect.right < -20 ||
-          rect.left > window.innerWidth + 20
-        ) {
-          continue;
-        }
-
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const dist = Math.hypot(cx - clientX, cy - clientY);
-        const btnRadius = Math.max(rect.width, rect.height) / 2;
-        const reach = btnRadius + 60; // 60px magnetic catch zone around button perimeter
-
-        if (dist < reach && dist < closestDist) {
-          closestDist = dist;
-          bestTarget = el;
+      if (directTarget) {
+        const rect = directTarget.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          bestTarget = directTarget;
           closestRect = rect;
-          closestBtnRadius = btnRadius;
+          closestBtnRadius = Math.max(rect.width, rect.height) / 2;
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          closestDist = Math.hypot(cx - currentX, cy - currentY);
         }
       }
-    }
 
-    // Apply magnetic pull if a target is found
-    if (bestTarget && closestRect) {
-      const cx = closestRect.left + closestRect.width / 2;
-      const cy = closestRect.top + closestRect.height / 2;
-      const reach = closestBtnRadius + 60;
-      const dist = Math.hypot(cx - clientX, cy - clientY);
+      // 2. Proximity check across visible candidates (e.g. gaps between dock icons or approaching buttons)
+      if (!bestTarget) {
+        for (let i = 0; i < candidates.length; i++) {
+          const el = candidates[i];
+          const rect = el.getBoundingClientRect();
+          if (rect.width === 0 || rect.height === 0) continue;
+          if (
+            rect.bottom < -20 ||
+            rect.top > window.innerHeight + 20 ||
+            rect.right < -20 ||
+            rect.left > window.innerWidth + 20
+          ) {
+            continue;
+          }
 
-      if (dist < reach) {
-        // High attraction towards center of button with subtle elastic follow
-        let pull = 0.88;
-        if (dist > closestBtnRadius) {
-          const t = (dist - closestBtnRadius) / (reach - closestBtnRadius);
-          pull = 0.88 * Math.pow(1 - t, 1.8);
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dist = Math.hypot(cx - currentX, cy - currentY);
+          const btnRadius = Math.max(rect.width, rect.height) / 2;
+          const reach = btnRadius + 60; // 60px magnetic catch zone around button perimeter
+
+          if (dist < reach && dist < closestDist) {
+            closestDist = dist;
+            bestTarget = el;
+            closestRect = rect;
+            closestBtnRadius = btnRadius;
+          }
         }
-
-        const targetX = clientX + (cx - clientX) * pull;
-        const targetY = clientY + (cy - clientY) * pull;
-
-        ring3TargetX.set(targetX);
-        ring3TargetY.set(targetY);
-
-        // Dynamically scale the outer ring to comfortably frame the button
-        const desiredDiameter = Math.max(closestRect.width, closestRect.height) + 12;
-        const maxScale = Math.max(1.22, Math.min(2.1, desiredDiameter / 52));
-        const currentScale = 1 + (maxScale - 1) * (pull / 0.88);
-
-        ring3ScaleVal.set(isClickingRef.current ? currentScale * 0.82 : currentScale);
-        setIsMagnetized(true);
-        setIsHovering(true);
-        return;
       }
-    }
 
-    // Default tracking when not magnetized
-    ring3TargetX.set(clientX);
-    ring3TargetY.set(clientY);
-    const regularScale = isClickingRef.current ? 0.75 : isHoveringRef.current ? 1.25 : 1;
-    ring3ScaleVal.set(regularScale);
-    setIsMagnetized(false);
+      // Apply magnetic pull if a target is found
+      if (bestTarget && closestRect) {
+        const cx = closestRect.left + closestRect.width / 2;
+        const cy = closestRect.top + closestRect.height / 2;
+        const reach = closestBtnRadius + 60;
+        const dist = Math.hypot(cx - currentX, cy - currentY);
+
+        if (dist < reach) {
+          // High attraction towards center of button with subtle elastic follow
+          let pull = 0.88;
+          if (dist > closestBtnRadius) {
+            const t = (dist - closestBtnRadius) / (reach - closestBtnRadius);
+            pull = 0.88 * Math.pow(1 - t, 1.8);
+          }
+
+          const targetX = currentX + (cx - currentX) * pull;
+          const targetY = currentY + (cy - currentY) * pull;
+
+          ring3TargetX.set(targetX);
+          ring3TargetY.set(targetY);
+
+          // Dynamically scale the outer ring to comfortably frame the button
+          const desiredDiameter = Math.max(closestRect.width, closestRect.height) + 12;
+          const maxScale = Math.max(1.22, Math.min(2.1, desiredDiameter / 52));
+          const currentScale = 1 + (maxScale - 1) * (pull / 0.88);
+
+          ring3ScaleVal.set(isClickingRef.current ? currentScale * 0.82 : currentScale);
+          setIsMagnetized(true);
+          setIsHovering(true);
+          return;
+        }
+      }
+
+      // Default tracking when not magnetized
+      ring3TargetX.set(currentX);
+      ring3TargetY.set(currentY);
+      const regularScale = isClickingRef.current ? 0.75 : isHoveringRef.current ? 1.25 : 1;
+      ring3ScaleVal.set(regularScale);
+      setIsMagnetized(false);
+    };
+
+    const now = performance.now();
+    if (now - lastMagneticUpdate.current > 40) {
+      if (magneticTimeoutRef.current) clearTimeout(magneticTimeoutRef.current);
+      performMagneticCheck();
+    } else {
+      if (magneticTimeoutRef.current) clearTimeout(magneticTimeoutRef.current);
+      magneticTimeoutRef.current = setTimeout(performMagneticCheck, 40);
+    }
   }, [cursorX, cursorY, ring3TargetX, ring3TargetY, ring3ScaleVal]);
 
   // Handle cursor visibility and movements

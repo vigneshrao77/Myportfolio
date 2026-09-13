@@ -56,8 +56,7 @@ export default function CursorSpotlight() {
         width: '600px',
         height: '600px',
         borderRadius: '50%',
-        backgroundColor: 'rgba(201, 161, 90, 0.025)', // Subtle accent glow
-        filter: 'blur(100px)',
+        background: 'radial-gradient(circle, rgba(201, 161, 90, 0.15) 0%, transparent 60%)', // Soft glow without expensive blur
         pointerEvents: 'none',
         zIndex: 0,
         transform: 'translate(-50%, -50%)', // Center on cursor

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from "framer-motion";
 
 interface TiltCardProps {
   children: React.ReactNode;
@@ -22,7 +22,9 @@ export function TiltCard({
 }: TiltCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [glarePos, setGlarePos] = useState({ x: 50, y: 50 });
+
+  const glareX = useMotionValue(50);
+  const glareY = useMotionValue(50);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -34,6 +36,8 @@ export function TiltCard({
   const rotateX = useTransform(springY, [-0.5, 0.5], [maxTilt, -maxTilt]);
   const rotateY = useTransform(springX, [-0.5, 0.5], [-maxTilt, maxTilt]);
 
+  const background = useMotionTemplate`radial-gradient(circle 240px at ${glareX}% ${glareY}%, ${glareColor}, transparent 80%)`;
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
@@ -43,10 +47,8 @@ export function TiltCard({
     mouseX.set(x);
     mouseY.set(y);
 
-    setGlarePos({
-      x: ((e.clientX - rect.left) / rect.width) * 100,
-      y: ((e.clientY - rect.top) / rect.height) * 100,
-    });
+    glareX.set(((e.clientX - rect.left) / rect.width) * 100);
+    glareY.set(((e.clientY - rect.top) / rect.height) * 100);
   };
 
   const handleMouseEnter = () => {
@@ -70,6 +72,7 @@ export function TiltCard({
         rotateY,
         transformStyle: "preserve-3d",
         perspective: 1000,
+        willChange: "transform",
       }}
       animate={{
         scale: isHovered ? scale : 1,
@@ -78,16 +81,16 @@ export function TiltCard({
       className={`relative rounded-xl overflow-hidden ${className}`}
     >
       {/* Dynamic Cursor Spotlight Glare */}
-      <div
+      <motion.div
         style={{
           position: "absolute",
           inset: 0,
-          background: `radial-gradient(circle 240px at ${glarePos.x}% ${glarePos.y}%, ${glareColor}, transparent 80%)`,
-          opacity: isHovered ? 1 : 0,
-          transition: "opacity 0.25s ease",
+          background,
           pointerEvents: "none",
           zIndex: 2,
         }}
+        animate={{ opacity: isHovered ? 1 : 0 }}
+        transition={{ duration: 0.25 }}
       />
 
       {/* Dynamic Border Glow */}
