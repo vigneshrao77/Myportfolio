@@ -1,3 +1,9 @@
+/* Hide default cursor globally when NeonCursor is active.
+   This replaces the dynamic <style> element injection in NeonCursor.jsx. */
+* {
+  cursor: none !important;
+}
+
 .neon-cursor-container {
   pointer-events: none;
   position: fixed;

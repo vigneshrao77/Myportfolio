@@ -89,22 +89,22 @@ const DotField = memo(({
 
     function onMouseMove(e) {
       const s = sizeRef.current;
-      mouseRef.current.x = e.pageX - s.offsetX;
-      mouseRef.current.y = e.pageY - s.offsetY;
-    }
-
-    function updateMouseSpeed() {
+      const now = performance.now();
       const m = mouseRef.current;
-      const dx = m.prevX - m.x;
-      const dy = m.prevY - m.y;
+      const newX = e.pageX - s.offsetX;
+      const newY = e.pageY - s.offsetY;
+
+      // Compute speed imperatively — no interval needed
+      const dx = m.prevX - newX;
+      const dy = m.prevY - newY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       m.speed += (dist - m.speed) * 0.5;
       if (m.speed < 0.001) m.speed = 0;
-      m.prevX = m.x;
-      m.prevY = m.y;
+      m.prevX = newX;
+      m.prevY = newY;
+      m.x = newX;
+      m.y = newY;
     }
-
-    const speedInterval = setInterval(updateMouseSpeed, 20);
 
     let frameCount = 0;
     let isVisible = true;
@@ -228,7 +228,6 @@ const DotField = memo(({
 
     return () => {
       cancelAnimationFrame(rafRef.current);
-      clearInterval(speedInterval);
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);

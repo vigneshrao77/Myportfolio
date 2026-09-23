@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 interface MouseFollowingEyesProps {
   size?: number;
@@ -9,27 +9,29 @@ interface MouseFollowingEyesProps {
   className?: string;
 }
 
+// Module-level mouse position ref shared between eyes — avoids React re-renders on mousemove.
+// This is safe because there's only ever one MouseFollowingEyes instance on the page.
+const globalMouseRef = { x: -1000, y: -1000 };
+
 const MouseFollowingEyes: React.FC<MouseFollowingEyesProps> = ({
   size = 30,
   gap = 6,
   className = "",
 }) => {
-  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
-  const [isBlinking, setIsBlinking] = useState(false);
-  const eye1Ref = useRef<HTMLDivElement>(null);
-  const eye2Ref = useRef<HTMLDivElement>(null);
-
-  // Global mouse tracking across viewport
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      // Update the ref directly — no React state, no re-renders
+      globalMouseRef.x = e.clientX;
+      globalMouseRef.y = e.clientY;
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Smooth, organic human eyelid blink cycle with occasional double-blinks
+  // Blink cycle — this is the only state that legitimately triggers re-renders
+  const [isBlinking, setIsBlinking] = React.useState(false);
+
   useEffect(() => {
     let blinkTimer: NodeJS.Timeout;
 
@@ -75,39 +77,19 @@ const MouseFollowingEyes: React.FC<MouseFollowingEyesProps> = ({
         cursor: "default",
       }}
     >
-      <Eye
-        size={size}
-        mouseX={mousePos.x}
-        mouseY={mousePos.y}
-        isBlinking={isBlinking}
-        selfRef={eye1Ref as React.RefObject<HTMLDivElement>}
-      />
-      <Eye
-        size={size}
-        mouseX={mousePos.x}
-        mouseY={mousePos.y}
-        isBlinking={isBlinking}
-        selfRef={eye2Ref as React.RefObject<HTMLDivElement>}
-      />
+      <Eye size={size} isBlinking={isBlinking} />
+      <Eye size={size} isBlinking={isBlinking} />
     </div>
   );
 };
 
 interface EyeProps {
   size: number;
-  mouseX: number;
-  mouseY: number;
   isBlinking: boolean;
-  selfRef: React.RefObject<HTMLDivElement>;
 }
 
-const Eye: React.FC<EyeProps> = ({
-  size,
-  mouseX,
-  mouseY,
-  isBlinking,
-  selfRef,
-}) => {
+const Eye: React.FC<EyeProps> = ({ size, isBlinking }) => {
+  const selfRef = useRef<HTMLDivElement>(null);
   const pupilRef = useRef<HTMLDivElement>(null);
   const targetPos = useRef({ x: 0, y: 0 });
   const currentPos = useRef({ x: 0, y: 0 });
@@ -133,42 +115,39 @@ const Eye: React.FC<EyeProps> = ({
     };
   }, []);
 
-  // Compute realistic look angle with smooth depth constraint
   useEffect(() => {
-    updateCenter();
-    if (mouseX === -1000 && mouseY === -1000) {
-      targetPos.current = { x: 0, y: 0 };
-      return;
-    }
-
-    const center = centerRef.current;
-    const dx = mouseX - center.x;
-    const dy = mouseY - center.y;
-    const dist = Math.hypot(dx, dy);
-
     const pupilDiameter = Math.max(12, Math.round(size * 0.48));
     const maxMove = Math.max(3.5, (size - pupilDiameter) / 2 - 1.5);
 
-    if (dist < 3) {
-      targetPos.current = { x: 0, y: 0 };
-      return;
-    }
-
-    const angle = Math.atan2(dy, dx);
-    const moveDist = Math.min(maxMove, Math.pow(dist / 180, 0.8) * maxMove);
-
-    targetPos.current = {
-      x: Math.cos(angle) * moveDist,
-      y: Math.sin(angle) * moveDist,
-    };
-  }, [mouseX, mouseY, size]);
-
-  // Smooth critically-damped spring saccades
-  useEffect(() => {
     const loop = () => {
+      // Read mouse position from the shared module-level ref — no prop updates, no re-renders
+      const mouseX = globalMouseRef.x;
+      const mouseY = globalMouseRef.y;
+
+      // Compute target pupil position
+      if (mouseX === -1000 && mouseY === -1000) {
+        targetPos.current = { x: 0, y: 0 };
+      } else {
+        const center = centerRef.current;
+        const dx = mouseX - center.x;
+        const dy = mouseY - center.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < 3) {
+          targetPos.current = { x: 0, y: 0 };
+        } else {
+          const angle = Math.atan2(dy, dx);
+          const moveDist = Math.min(maxMove, Math.pow(dist / 180, 0.8) * maxMove);
+          targetPos.current = {
+            x: Math.cos(angle) * moveDist,
+            y: Math.sin(angle) * moveDist,
+          };
+        }
+      }
+
+      // Critically-damped spring saccades
       const target = targetPos.current;
       const current = currentPos.current;
-
       current.x += (target.x - current.x) * 0.16;
       current.y += (target.y - current.y) * 0.16;
 
@@ -179,11 +158,12 @@ const Eye: React.FC<EyeProps> = ({
       rafRef.current = requestAnimationFrame(loop);
     };
 
+    updateCenter();
     rafRef.current = requestAnimationFrame(loop);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [size]);
 
   const pupilDiameter = Math.max(12, Math.round(size * 0.48));
   const innerPupilSize = Math.max(6, Math.round(pupilDiameter * 0.48));

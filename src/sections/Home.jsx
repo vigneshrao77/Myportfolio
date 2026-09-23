@@ -9,12 +9,8 @@ import HeroParticles from '../components/animations/HeroParticles';
 import { TextParticle } from '@/components/ui/text-particle';
 import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes';
 import '../styles/home.css';
-import myPhoto from '../assets/image.jpg';
 
-const Home = () => {
-  const [isFlipped, setIsFlipped] = useState(false);
-
-  const codeString = `#include <iostream>
+const codeString = `#include <iostream>
 #include <opencv2/opencv.hpp>
 using namespace std;
 using namespace cv;
@@ -30,6 +26,9 @@ int main() {
     waitKey(0);
     return 0;
 }`;
+
+const Home = () => {
+  const [isFlipped, setIsFlipped] = useState(false);
 
   return (
     <SectionWrapper id="home" className="home-section">

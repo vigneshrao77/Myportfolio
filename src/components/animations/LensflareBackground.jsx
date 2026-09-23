@@ -23,6 +23,12 @@ const LensflareBackground = () => {
       scrollY = window.scrollY;
     };
 
+    let isVisible = true;
+    const visibilityObserver = new IntersectionObserver(
+      (entries) => { isVisible = entries[0].isIntersecting; },
+      { threshold: 0 }
+    );
+
     const init = () => {
       const container = containerRef.current;
       if (!container) return;
@@ -152,7 +158,7 @@ const LensflareBackground = () => {
       timer.connect( document );
 
       renderer.setAnimationLoop( () => {
-        if (!timer) return;
+        if (!timer || !isVisible) return; // Skip render when off-screen
         timer.update();
         const delta = timer.getDelta();
         const elapsedTime = timer.getElapsed();
@@ -209,12 +215,15 @@ const LensflareBackground = () => {
     };
 
     window.addEventListener( 'resize', handleResize );
-    window.addEventListener( 'mousemove', onMouseMove );
-    window.addEventListener( 'scroll', onScroll );
+    window.addEventListener( 'mousemove', onMouseMove, { passive: true } );
+    window.addEventListener( 'scroll', onScroll, { passive: true } );
     init();
+    // Start observing after init so containerRef.current is populated
+    if (containerRef.current) visibilityObserver.observe(containerRef.current);
 
     return () => {
       isDisposed = true;
+      visibilityObserver.disconnect();
       window.removeEventListener( 'resize', handleResize );
       window.removeEventListener( 'mousemove', onMouseMove );
       window.removeEventListener( 'scroll', onScroll );

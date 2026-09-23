@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import React, { useRef } from "react";
+import { motion, useReducedMotion, useMotionValue } from "framer-motion";
 
 import AnimatedHeading from "../components/animations/AnimatedHeading";
 import { StaggerReveal, StaggerItem } from "../components/animations/StaggerReveal";
@@ -10,7 +10,11 @@ import AnimatedDownloadButton from "../components/ui/AnimatedDownloadButton";
 const Resume = () => {
   const shouldReduceMotion = useReducedMotion();
   const sectionRef = useRef(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  // useMotionValue avoids React state re-renders on every mousemove.
+  // The spotlight motion.div reads these values directly via the 'style' prop.
+  const spotlightX = useMotionValue(-200);
+  const spotlightY = useMotionValue(-200);
 
   const handleDownload = () => {
     window.open('/resume.pdf?v=2', '_blank');
@@ -19,10 +23,9 @@ const Resume = () => {
   const handleMouseMove = (e) => {
     if (shouldReduceMotion || !sectionRef.current) return;
     const rect = sectionRef.current.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
+    // Set motion values imperatively — zero React state updates
+    spotlightX.set(e.clientX - rect.left - 200);
+    spotlightY.set(e.clientY - rect.top - 200);
   };
 
   return (
@@ -49,15 +52,15 @@ const Resume = () => {
           glowColor="transparent"
         />
       </div>
-      {/* Ambient Spotlight */}
+      {/* Ambient Spotlight — driven by motion values, not React state */}
         {!shouldReduceMotion && (
           <motion.div
-            animate={{ x: mousePos.x - 200, y: mousePos.y - 200 }}
-            transition={{ type: "spring", damping: 40, stiffness: 100, mass: 0.5 }}
             style={{
               position: 'absolute',
               top: 0,
               left: 0,
+              x: spotlightX,
+              y: spotlightY,
               width: '400px',
               height: '400px',
               background: 'radial-gradient(circle, rgba(201, 161, 90, 0.05) 0%, rgba(201, 161, 90, 0) 60%)',

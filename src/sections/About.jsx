@@ -5,7 +5,7 @@ import SectionWrapper from "../components/SectionWrapper";
 import LensflareBackground from "../components/animations/LensflareBackground";
 import "../styles/about.css";
 
-gsap.registerPlugin(ScrollTrigger);
+// ScrollTrigger is registered once in main.jsx — no module-level side effects here.
 
 const About = () => {
   const containerRef = useRef(null);

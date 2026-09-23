@@ -184,7 +184,18 @@ export function TextParticle({
     });
     ro.observe(container);
 
+    let animIsVisible = true;
+    const visibilityObserver = new IntersectionObserver(
+      (entries) => { animIsVisible = entries[0].isIntersecting; },
+      { threshold: 0 }
+    );
+    visibilityObserver.observe(container);
+
     const animate = () => {
+      if (!animIsVisible) {
+        animFrameRef.current = requestAnimationFrame(animate);
+        return;
+      }
       animTime += 0.03;
       const p = propsRef.current;
       ctx.clearRect(0, 0, w, h);
@@ -271,6 +282,7 @@ export function TextParticle({
         cancelAnimationFrame(animFrameRef.current);
       }
       ro.disconnect();
+      visibilityObserver.disconnect();
       window.removeEventListener("pointermove", handlePointerMove);
       container.removeEventListener("pointerleave", handlePointerLeave);
     };

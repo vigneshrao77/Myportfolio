@@ -541,6 +541,10 @@ class App {
     }
   }
   update() {
+    if (!this.isVisible) {
+      this.raf = window.requestAnimationFrame(this.update.bind(this));
+      return;
+    }
     this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease);
     const direction = this.scroll.current > this.scroll.last ? 'right' : 'left';
     if (this.medias) {
@@ -606,6 +610,7 @@ export default function CircularGallery({
     if (!containerRef.current) return;
     let app;
     let isMounted = true;
+    let observer;
     resolveFont(font, fontUrl).then(resolvedFont => {
       if (!isMounted || !containerRef.current) return;
       app = new App(containerRef.current, {
@@ -617,10 +622,18 @@ export default function CircularGallery({
         scrollSpeed,
         scrollEase
       });
+      // Pause OGL RAF when gallery is off-screen
+      app.isVisible = true;
+      observer = new IntersectionObserver(
+        (entries) => { if (app) app.isVisible = entries[0].isIntersecting; },
+        { threshold: 0 }
+      );
+      observer.observe(containerRef.current);
     });
 
     return () => {
       isMounted = false;
+      if (observer) observer.disconnect();
       if (app) app.destroy();
     };
   }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase]);

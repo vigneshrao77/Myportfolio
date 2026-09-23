@@ -85,9 +85,18 @@ export default function HeroParticles() {
     const damping = 0.9;
 
     let animationFrameId;
+    let isVisible = true;
+
+    // Pause rendering when the section is off-screen to save GPU/CPU
+    const observer = new IntersectionObserver(
+      (entries) => { isVisible = entries[0].isIntersecting; },
+      { threshold: 0 }
+    );
+    observer.observe(container);
 
     function animate() {
       animationFrameId = requestAnimationFrame(animate);
+      if (!isVisible) return; // Skip render when off-screen
       
       // Smooth magnetic easing (spring-like)
       currentX += (targetX - currentX) * stiffness;
@@ -141,6 +150,7 @@ export default function HeroParticles() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
+      observer.disconnect();
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }

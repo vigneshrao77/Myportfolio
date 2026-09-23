@@ -9,11 +9,15 @@ const NeonCursor = () => {
   const [isMagnetized, setIsMagnetized] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const mousePosRef = useRef({ x: -100, y: -100 });
+  const mousePosRef = useRef({ x: -1000, y: -1000 });
   const isClickingRef = useRef(false);
   const isHoveringRef = useRef(false);
+  const isMagnetizedRef = useRef(false);
+  const isVisibleRef = useRef(false);
   const lastMagneticUpdate = useRef(0);
   const magneticTimeoutRef = useRef(null);
+  const magneticCandidatesRef = useRef(null);
+  const magneticCandidatesRefresh = useRef(0);
 
   // Raw mouse coordinates initialized offscreen
   const cursorX = useMotionValue(-100);
@@ -40,9 +44,24 @@ const NeonCursor = () => {
   const ring3Y = useSpring(ring3TargetY, springRing3);
   const ring3Scale = useSpring(ring3ScaleVal, springScale);
 
+  // Magnetic attraction restricted to header dock buttons.
+  // Candidate list is cached briefly to avoid querySelectorAll on every move.
+  const headerMagneticSelector =
+    '.dock-item, .mobile-item, .mobile-toggle, .navbar-floating-dock-container [data-magnetic="true"]';
+
+  const getMagneticCandidates = useCallback(() => {
+    const now = performance.now();
+    if (!magneticCandidatesRef.current || now - magneticCandidatesRefresh.current > 250) {
+      magneticCandidatesRef.current = document.querySelectorAll(headerMagneticSelector);
+      magneticCandidatesRefresh.current = now;
+    }
+    return magneticCandidatesRef.current;
+  }, [headerMagneticSelector]);
+
   // Function to calculate magnetic attraction toward buttons/dock items
   const updateMagneticCursor = useCallback((clientX, clientY) => {
-    mousePosRef.current = { x: clientX, y: clientY };
+    mousePosRef.current.x = clientX;
+    mousePosRef.current.y = clientY;
 
     cursorX.set(clientX);
     cursorY.set(clientY);
@@ -52,9 +71,7 @@ const NeonCursor = () => {
       const currentX = mousePosRef.current.x;
       const currentY = mousePosRef.current.y;
 
-      // Restrict magnetic attraction strictly to header buttons (floating dock navigation items)
-      const headerMagneticSelector = '.dock-item, .mobile-item, .mobile-toggle, .navbar-floating-dock-container [data-magnetic="true"]';
-      const candidates = document.querySelectorAll(headerMagneticSelector);
+      const candidates = getMagneticCandidates();
 
       let bestTarget = null;
       let closestDist = Infinity;
@@ -134,8 +151,14 @@ const NeonCursor = () => {
           const currentScale = 1 + (maxScale - 1) * (pull / 0.88);
 
           ring3ScaleVal.set(isClickingRef.current ? currentScale * 0.82 : currentScale);
-          setIsMagnetized(true);
-          setIsHovering(true);
+          if (!isMagnetizedRef.current) {
+            isMagnetizedRef.current = true;
+            setIsMagnetized(true);
+          }
+          if (!isHoveringRef.current) {
+            isHoveringRef.current = true;
+            setIsHovering(true);
+          }
           return;
         }
       }
@@ -145,7 +168,10 @@ const NeonCursor = () => {
       ring3TargetY.set(currentY);
       const regularScale = isClickingRef.current ? 0.75 : isHoveringRef.current ? 1.25 : 1;
       ring3ScaleVal.set(regularScale);
-      setIsMagnetized(false);
+      if (isMagnetizedRef.current) {
+        isMagnetizedRef.current = false;
+        setIsMagnetized(false);
+      }
     };
 
     const now = performance.now();
@@ -156,11 +182,12 @@ const NeonCursor = () => {
       if (magneticTimeoutRef.current) clearTimeout(magneticTimeoutRef.current);
       magneticTimeoutRef.current = setTimeout(performMagneticCheck, 40);
     }
-  }, [cursorX, cursorY, ring3TargetX, ring3TargetY, ring3ScaleVal]);
+  }, [cursorX, cursorY, ring3TargetX, ring3TargetY, ring3ScaleVal, getMagneticCandidates]);
 
-  // Handle cursor visibility and movements
+  // Handle cursor visibility and movements (visibility tracked via ref to keep handler stable)
   const handleMouseMove = useCallback((e) => {
-    if (!isVisible) {
+    if (!isVisibleRef.current) {
+      isVisibleRef.current = true;
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
       ring1X.jump?.(e.clientX);
@@ -174,7 +201,7 @@ const NeonCursor = () => {
       setIsVisible(true);
     }
     updateMagneticCursor(e.clientX, e.clientY);
-  }, [cursorX, cursorY, ring1X, ring1Y, ring2X, ring2Y, ring3TargetX, ring3TargetY, ring3X, ring3Y, isVisible, updateMagneticCursor]);
+  }, [cursorX, cursorY, ring1X, ring1Y, ring2X, ring2Y, ring3TargetX, ring3TargetY, ring3X, ring3Y, updateMagneticCursor]);
 
   // Handle scroll events (updates magnetic lock as buttons scroll under or near cursor)
   const handleScroll = useCallback(() => {
@@ -199,13 +226,16 @@ const NeonCursor = () => {
     if (!target) return;
     
     // Check if hovering over interactive elements
-    const interactiveEl = target.closest('a, button, input, textarea, select, [data-hover="true"], [role="button"], [data-magnetic="true"]');
+    const interactiveEl = target.closest?.('a, button, input, textarea, select, [data-hover="true"], [role="button"], [data-magnetic="true"]');
     if (
       interactiveEl || 
       window.getComputedStyle(target).cursor === 'pointer'
     ) {
       isHoveringRef.current = true;
-      setIsHovering(true);
+      if (!isHoveringRef.current || !isHovering) {
+        isHoveringRef.current = true;
+        setIsHovering(true);
+      }
     }
   }, []);
 
@@ -214,8 +244,14 @@ const NeonCursor = () => {
     setIsHovering(false);
   }, []);
 
-  const handleMouseEnter = useCallback(() => setIsVisible(true), []);
-  const handleMouseLeave = useCallback(() => setIsVisible(false), []);
+  const handleMouseEnter = useCallback(() => {
+    isVisibleRef.current = true;
+    setIsVisible(true);
+  }, []);
+  const handleMouseLeave = useCallback(() => {
+    isVisibleRef.current = false;
+    setIsVisible(false);
+  }, []);
 
   useEffect(() => {
     if (shouldReduceMotion) return;
@@ -228,15 +264,7 @@ const NeonCursor = () => {
     window.addEventListener('mouseout', handleMouseOut);
     document.addEventListener('mouseenter', handleMouseEnter);
     document.addEventListener('mouseleave', handleMouseLeave);
-    
-    // Inject global styles to force hide default cursor
-    const style = document.createElement('style');
-    style.innerHTML = `
-      * {
-        cursor: none !important;
-      }
-    `;
-    document.head.appendChild(style);
+    // cursor: none is applied via NeonCursor.css (static import) — no DOM injection needed.
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -247,10 +275,7 @@ const NeonCursor = () => {
       window.removeEventListener('mouseout', handleMouseOut);
       document.removeEventListener('mouseenter', handleMouseEnter);
       document.removeEventListener('mouseleave', handleMouseLeave);
-      
-      if (document.head.contains(style)) {
-        document.head.removeChild(style);
-      }
+      if (magneticTimeoutRef.current) clearTimeout(magneticTimeoutRef.current);
     };
   }, [shouldReduceMotion, handleMouseMove, handleScroll, handleMouseDown, handleMouseUp, handleMouseOver, handleMouseOut, handleMouseEnter, handleMouseLeave]);
 

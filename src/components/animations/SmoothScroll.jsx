@@ -9,13 +9,15 @@ export default function SmoothScroll({ children }) {
       smoothWheel: true,
     });
 
-    function raf(time) {
+    let rafId = requestAnimationFrame(function raf(time) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
+    });
 
-    return () => lenis.destroy();
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
   }, []);
 
   return children;

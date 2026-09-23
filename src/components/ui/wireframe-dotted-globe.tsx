@@ -269,7 +269,20 @@ export function WireframeDottedGlobe({
 
     // 12. Animation Loop
     let time = 0;
+    let animIsVisible = true;
+
+    // Pause rendering when off-screen to avoid wasting GPU on hidden sections
+    const visibilityObserver = new IntersectionObserver(
+      (entries) => { animIsVisible = entries[0].isIntersecting; },
+      { threshold: 0 }
+    );
+    visibilityObserver.observe(container);
+
     const animate = () => {
+      if (!animIsVisible) {
+        animId = requestAnimationFrame(animate);
+        return;
+      }
       time += 0.02;
 
       if (!isDraggingRef.current) {
@@ -310,6 +323,7 @@ export function WireframeDottedGlobe({
 
     return () => {
       cancelAnimationFrame(animId);
+      visibilityObserver.disconnect();
       dom.removeEventListener("mousedown", handlePointerDown);
       window.removeEventListener("mousemove", handlePointerMove);
       window.removeEventListener("mouseup", handlePointerUp);

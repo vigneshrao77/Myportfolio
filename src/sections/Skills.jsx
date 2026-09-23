@@ -3,16 +3,18 @@ import AnimatedHeading from '../components/animations/AnimatedHeading';
 import { TiltCard } from '@/components/ui/3d-tilt-card';
 import '../styles/skills.css';
 
+// Module-level constant — created once, never recreated on re-render
+const skillCategories = [
+  { title: 'Programming Languages', items: ['Java', 'C', 'C++', 'JavaScript', 'Python'] },
+  { title: 'Frontend Development', items: ['HTML', 'CSS', 'Bootstrap', 'ReactJS'] },
+  { title: 'Backend Development', items: ['Node.js', 'Express.js', 'REST APIs'] },
+  { title: 'Databases', items: ['MongoDB', 'Oracle SQL', 'PostgreSQL', 'Supabase'] },
+  { title: 'CS Fundamentals', items: ['Data Structures and Algorithms', 'OOP Concepts', 'DBMS'] },
+  { title: 'Tools & Platforms', items: ['Git', 'GitHub', 'Figma', 'REST Client', 'Anaconda', 'n8n', 'Notion'] },
+  { title: 'AI / LLM Frameworks', items: ['LangChain', 'LangGraph', 'LangSmith'] }
+];
+
 const Skills = () => {
-  const skillCategories = [
-    { title: 'Programming Languages', items: ['Java', 'C', 'C++', 'JavaScript', 'Python'] },
-    { title: 'Frontend Development', items: ['HTML', 'CSS', 'Bootstrap', 'ReactJS'] },
-    { title: 'Backend Development', items: ['Node.js', 'Express.js', 'REST APIs'] },
-    { title: 'Databases', items: ['MongoDB', 'Oracle SQL', 'PostgreSQL', 'Supabase'] },
-    { title: 'CS Fundamentals', items: ['Data Structures and Algorithms', 'OOP Concepts', 'DBMS'] },
-    { title: 'Tools & Platforms', items: ['Git', 'GitHub', 'Figma', 'REST Client', 'Anaconda', 'n8n', 'Notion'] },
-    { title: 'AI / LLM Frameworks', items: ['LangChain', 'LangGraph', 'LangSmith'] }
-  ];
 
   return (
     <section id="skills" className="skills-section" style={{ position: 'relative', overflow: 'hidden' }}>
