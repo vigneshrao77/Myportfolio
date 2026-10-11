@@ -17,7 +17,12 @@ const Resume = () => {
   const spotlightY = useMotionValue(-200);
 
   const handleDownload = () => {
-    window.open('/resume.pdf?v=2', '_blank');
+    const link = document.createElement('a');
+    link.href = '/resume.pdf';
+    link.setAttribute('download', 'Vignesh_Rao_Resume.pdf');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleMouseMove = (e) => {
