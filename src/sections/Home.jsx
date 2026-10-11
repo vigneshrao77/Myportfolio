@@ -52,7 +52,7 @@ const Home = () => {
             </div>
           </div>
           <p className="home-description">
-            Engineering resilient full-stack systems and exploring deep algorithmic problems in C++.
+            Building full-stack MERN applications and AI-powered workflows, while practicing DSA in C++.
           </p>
           
           <div className="home-cta">
