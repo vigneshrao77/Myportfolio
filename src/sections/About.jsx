@@ -110,10 +110,10 @@ const About = () => {
         <div className="about-content">
           <div className="about-text-column" ref={textColumnRef}>
             <p className="about-intro">
-              I build resilient systems and solve complex problems. Currently pursuing my B.Tech in Computer Science at VNR VJIET, my foundation is built on rigorous algorithmic thinking and competitive programming in C++.
+              I build full-stack web applications and AI-powered tools. Currently pursuing my B.Tech in Computer Science at VNR VJIET, I turn ideas into working products with the MERN stack, and I practice data structures and algorithms in C++ to keep growing as a problem solver.
             </p>
             <p className="about-description">
-              Rather than just writing code, I engineer solutions. Whether it's architecting a full-stack MERN application with secure REST APIs or optimizing data structures for milliseconds of performance, I focus on the intersection of deep technical fundamentals and real-world impact.
+              My work centers on reliability and security: well-structured REST APIs, role-based access control, and efficient data modeling, paired with clean, responsive interfaces. I also apply LLMs and workflow automation to real-world problems, with an emphasis on solutions that are scalable, maintainable, and useful in practice.
             </p>
           </div>
           
