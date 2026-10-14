@@ -110,13 +110,25 @@ const DotField = memo(({
     let isVisible = true;
 
     const observer = new IntersectionObserver((entries) => {
-      isVisible = entries[0].isIntersecting;
+      const nowVisible = entries[0].isIntersecting;
+      if (nowVisible && !isVisible) {
+        isVisible = true;
+        if (!rafRef.current) {
+          rafRef.current = requestAnimationFrame(tick);
+        }
+      } else if (!nowVisible && isVisible) {
+        isVisible = false;
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+      }
     }, { threshold: 0 });
     observer.observe(canvas);
 
     function tick() {
       if (!isVisible) {
-        rafRef.current = requestAnimationFrame(tick);
+        rafRef.current = null;
         return;
       }
       

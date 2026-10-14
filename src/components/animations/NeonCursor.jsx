@@ -203,9 +203,11 @@ const NeonCursor = () => {
     updateMagneticCursor(e.clientX, e.clientY);
   }, [cursorX, cursorY, ring1X, ring1Y, ring2X, ring2Y, ring3TargetX, ring3TargetY, ring3X, ring3Y, updateMagneticCursor]);
 
-  // Handle scroll events (updates magnetic lock as buttons scroll under or near cursor)
+  // Handle scroll events (only update if cursor is near header/dock area)
   const handleScroll = useCallback(() => {
     if (mousePosRef.current.x < 0) return;
+    // The magnetic dock is at the top/header; skip heavy checks if cursor is far down the page
+    if (mousePosRef.current.y > 140) return;
     updateMagneticCursor(mousePosRef.current.x, mousePosRef.current.y);
   }, [updateMagneticCursor]);
 
@@ -225,17 +227,11 @@ const NeonCursor = () => {
     const target = e.target;
     if (!target) return;
     
-    // Check if hovering over interactive elements
-    const interactiveEl = target.closest?.('a, button, input, textarea, select, [data-hover="true"], [role="button"], [data-magnetic="true"]');
-    if (
-      interactiveEl || 
-      window.getComputedStyle(target).cursor === 'pointer'
-    ) {
+    // Fast selector check without triggering getComputedStyle reflow
+    const interactiveEl = target.closest?.('a, button, input, textarea, select, [data-hover="true"], [role="button"], [data-magnetic="true"], .btn, .interactive');
+    if (interactiveEl) {
       isHoveringRef.current = true;
-      if (!isHoveringRef.current || !isHovering) {
-        isHoveringRef.current = true;
-        setIsHovering(true);
-      }
+      setIsHovering(true);
     }
   }, []);
 
@@ -258,13 +254,12 @@ const NeonCursor = () => {
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mouseover', handleMouseOver);
-    window.addEventListener('mouseout', handleMouseOut);
-    document.addEventListener('mouseenter', handleMouseEnter);
-    document.addEventListener('mouseleave', handleMouseLeave);
-    // cursor: none is applied via NeonCursor.css (static import) — no DOM injection needed.
+    window.addEventListener('mousedown', handleMouseDown, { passive: true });
+    window.addEventListener('mouseup', handleMouseUp, { passive: true });
+    window.addEventListener('mouseover', handleMouseOver, { passive: true });
+    window.addEventListener('mouseout', handleMouseOut, { passive: true });
+    document.addEventListener('mouseenter', handleMouseEnter, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave, { passive: true });
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);

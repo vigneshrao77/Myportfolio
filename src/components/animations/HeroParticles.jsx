@@ -89,14 +89,31 @@ export default function HeroParticles() {
 
     // Pause rendering when the section is off-screen to save GPU/CPU
     const observer = new IntersectionObserver(
-      (entries) => { isVisible = entries[0].isIntersecting; },
+      (entries) => {
+        const visible = entries[0].isIntersecting;
+        if (visible && !isVisible) {
+          isVisible = true;
+          if (!animationFrameId) {
+            animationFrameId = requestAnimationFrame(animate);
+          }
+        } else if (!visible && isVisible) {
+          isVisible = false;
+          if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+          }
+        }
+      },
       { threshold: 0 }
     );
     observer.observe(container);
 
     function animate() {
+      if (!isVisible) {
+        animationFrameId = null;
+        return;
+      }
       animationFrameId = requestAnimationFrame(animate);
-      if (!isVisible) return; // Skip render when off-screen
       
       // Smooth magnetic easing (spring-like)
       currentX += (targetX - currentX) * stiffness;
@@ -147,12 +164,14 @@ export default function HeroParticles() {
     animate();
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       observer.disconnect();
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
+      if (renderer.domElement && renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
       geometry.dispose();
       material.dispose();

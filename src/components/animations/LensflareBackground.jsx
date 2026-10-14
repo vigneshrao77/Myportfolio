@@ -23,9 +23,24 @@ const LensflareBackground = () => {
       scrollY = window.scrollY;
     };
 
-    let isVisible = true;
+    let isVisible = false;
+    let renderFrameRef = null;
+
     const visibilityObserver = new IntersectionObserver(
-      (entries) => { isVisible = entries[0].isIntersecting; },
+      (entries) => {
+        const intersecting = entries[0].isIntersecting;
+        if (intersecting && !isVisible) {
+          isVisible = true;
+          if (renderer && renderFrameRef) {
+            renderer.setAnimationLoop(renderFrameRef);
+          }
+        } else if (!intersecting && isVisible) {
+          isVisible = false;
+          if (renderer) {
+            renderer.setAnimationLoop(null);
+          }
+        }
+      },
       { threshold: 0 }
     );
 
@@ -157,8 +172,8 @@ const LensflareBackground = () => {
       timer = new THREE.Timer();
       timer.connect( document );
 
-      renderer.setAnimationLoop( () => {
-        if (!timer || !isVisible) return; // Skip render when off-screen
+      const renderFrame = () => {
+        if (!timer || !isVisible) return;
         timer.update();
         const delta = timer.getDelta();
         const elapsedTime = timer.getElapsed();
@@ -203,7 +218,12 @@ const LensflareBackground = () => {
         dustPoints.rotation.x = elapsedTime * 0.01;
 
         renderer.render( scene, camera );
-      } );
+      };
+
+      renderFrameRef = renderFrame;
+      if (isVisible) {
+        renderer.setAnimationLoop(renderFrame);
+      }
     };
 
     const handleResize = () => {

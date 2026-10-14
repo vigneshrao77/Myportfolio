@@ -87,6 +87,36 @@ export function TextParticle({
 
     const accentTone = { color: "#FFF9E6", glow: "rgba(255, 255, 255, 0.55)", blur: 5 };
 
+    interface GlowSprite {
+      canvas: HTMLCanvasElement;
+      halfSize: number;
+    }
+
+    const createGlowSprite = (color: string, glowColor: string, blur: number, radius: number): GlowSprite => {
+      const sprite = document.createElement("canvas");
+      const pad = blur * 2 + 4;
+      const size = Math.ceil(radius * 2 + pad * 2);
+      sprite.width = size;
+      sprite.height = size;
+      const sCtx = sprite.getContext("2d");
+      if (sCtx) {
+        sCtx.shadowColor = glowColor;
+        sCtx.shadowBlur = blur;
+        sCtx.fillStyle = color;
+        sCtx.beginPath();
+        sCtx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
+        sCtx.fill();
+      }
+      return { canvas: sprite, halfSize: size / 2 };
+    };
+
+    const pSize = propsRef.current.particleSize || 1.6;
+    const sprites: GlowSprite[] = [
+      ...colorTones.map((tone) => createGlowSprite(tone.color, tone.glow, tone.blur, pSize)),
+      createGlowSprite(accentTone.color, accentTone.glow, accentTone.blur, pSize * 1.15),
+    ];
+    const accentSpriteIndex = colorTones.length;
+
     const initParticles = () => {
       const p = propsRef.current;
       w = container.clientWidth || 600;
@@ -148,7 +178,8 @@ export function TextParticle({
           // High alpha threshold ensures clean, crisp letter contours without stray noise
           if (alpha > 135) {
             const isAccent = Math.random() < 0.1;
-            const tone = isAccent ? accentTone : colorTones[Math.floor(Math.random() * colorTones.length)];
+            const spriteIndex = isAccent ? accentSpriteIndex : Math.floor(Math.random() * colorTones.length);
+            const tone = isAccent ? accentTone : colorTones[spriteIndex];
 
             newParticles.push({
               x: intX,
@@ -186,14 +217,28 @@ export function TextParticle({
 
     let animIsVisible = true;
     const visibilityObserver = new IntersectionObserver(
-      (entries) => { animIsVisible = entries[0].isIntersecting; },
+      (entries) => {
+        const visible = entries[0].isIntersecting;
+        if (visible && !animIsVisible) {
+          animIsVisible = true;
+          if (!animFrameRef.current) {
+            animFrameRef.current = requestAnimationFrame(animate);
+          }
+        } else if (!visible && animIsVisible) {
+          animIsVisible = false;
+          if (animFrameRef.current) {
+            cancelAnimationFrame(animFrameRef.current);
+            animFrameRef.current = null;
+          }
+        }
+      },
       { threshold: 0 }
     );
     visibilityObserver.observe(container);
 
     const animate = () => {
       if (!animIsVisible) {
-        animFrameRef.current = requestAnimationFrame(animate);
+        animFrameRef.current = null;
         return;
       }
       animTime += 0.03;
@@ -240,21 +285,9 @@ export function TextParticle({
         pt.x += pt.vx;
         pt.y += pt.vy;
 
-        // Subtle shimmer for accent particles
-        let currentSize = pt.size;
-        if (pt.isAccent) {
-          currentSize += Math.sin(animTime + pt.pulsePhase) * 0.15;
-        }
-
-        // Render clean, antialiased particle
-        ctx.save();
-        ctx.shadowColor = pt.glowColor;
-        ctx.shadowBlur = pt.glowBlur;
-        ctx.fillStyle = pt.color;
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, Math.max(0.6, currentSize), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        // Fast GPU-accelerated sprite draw (replaces slow ctx.shadowBlur per particle)
+        const sprite = pt.isAccent ? sprites[accentSpriteIndex] : sprites[i % colorTones.length];
+        ctx.drawImage(sprite.canvas, pt.x - sprite.halfSize, pt.y - sprite.halfSize);
       }
 
       animFrameRef.current = requestAnimationFrame(animate);
@@ -262,11 +295,17 @@ export function TextParticle({
 
     animFrameRef.current = requestAnimationFrame(animate);
 
+    let cachedRect = canvas.getBoundingClientRect();
+    const updateRect = () => {
+      if (canvas) cachedRect = canvas.getBoundingClientRect();
+    };
+    window.addEventListener("scroll", updateRect, { passive: true });
+    window.addEventListener("resize", updateRect, { passive: true });
+
     const handlePointerMove = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
       mouseRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: e.clientX - cachedRect.left,
+        y: e.clientY - cachedRect.top,
       };
     };
 
@@ -283,6 +322,8 @@ export function TextParticle({
       }
       ro.disconnect();
       visibilityObserver.disconnect();
+      window.removeEventListener("scroll", updateRect);
+      window.removeEventListener("resize", updateRect);
       window.removeEventListener("pointermove", handlePointerMove);
       container.removeEventListener("pointerleave", handlePointerLeave);
     };
