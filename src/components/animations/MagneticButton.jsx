@@ -90,7 +90,7 @@ export default function MagneticButton({ children, className = '', style = {}, o
         zone.removeEventListener("mousedown", handleMouseDown);
         zone.removeEventListener("mouseup", handleMouseUp);
       };
-    }, zoneRef);
+    }, zone);
 
     return () => ctx.revert();
   }, []);

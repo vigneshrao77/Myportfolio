@@ -58,7 +58,7 @@ export default function ProjectRow({ title, href, children }) {
             </div>
           )}
         </div>
-        <p className="project-description">{children}</p>
+        <div className="project-description">{children}</div>
       </motion.div>
     </div>
   );

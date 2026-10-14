@@ -85,7 +85,7 @@ const About = () => {
         );
       });
 
-    }, containerRef);
+    }, containerRef.current || undefined);
 
     return () => ctx.revert();
   }, []);
