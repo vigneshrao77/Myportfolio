@@ -99,17 +99,25 @@ const Eye: React.FC<EyeProps> = ({ size, isBlinking }) => {
   const updateCenter = () => {
     if (!selfRef.current) return;
     const rect = selfRef.current.getBoundingClientRect();
-    centerRef.current = {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    };
+    if (rect.width > 0 && rect.height > 0) {
+      centerRef.current = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+    }
   };
 
   useEffect(() => {
     updateCenter();
     window.addEventListener("resize", updateCenter);
     window.addEventListener("scroll", updateCenter, { passive: true });
+    const t1 = setTimeout(updateCenter, 500);
+    const t2 = setTimeout(updateCenter, 1500);
+    const t3 = setTimeout(updateCenter, 3000);
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
       window.removeEventListener("resize", updateCenter);
       window.removeEventListener("scroll", updateCenter);
     };
@@ -119,7 +127,15 @@ const Eye: React.FC<EyeProps> = ({ size, isBlinking }) => {
     const pupilDiameter = Math.max(12, Math.round(size * 0.48));
     const maxMove = Math.max(3.5, (size - pupilDiameter) / 2 - 1.5);
 
+    let lastCenterUpdate = 0;
+
     const loop = () => {
+      const now = performance.now();
+      if (now - lastCenterUpdate > 250) {
+        updateCenter();
+        lastCenterUpdate = now;
+      }
+
       // Read mouse position from the shared module-level ref — no prop updates, no re-renders
       const mouseX = globalMouseRef.x;
       const mouseY = globalMouseRef.y;

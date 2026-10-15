@@ -200,6 +200,19 @@ export function TextParticle({
       }
 
       particlesRef.current = newParticles;
+      updateRect();
+    };
+
+    let cachedRect = canvas.getBoundingClientRect();
+    let lastRectUpdate = 0;
+    const updateRect = () => {
+      if (canvas) {
+        const r = canvas.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          cachedRect = r;
+          lastRectUpdate = performance.now();
+        }
+      }
     };
 
     if (document.fonts) {
@@ -295,14 +308,14 @@ export function TextParticle({
 
     animFrameRef.current = requestAnimationFrame(animate);
 
-    let cachedRect = canvas.getBoundingClientRect();
-    const updateRect = () => {
-      if (canvas) cachedRect = canvas.getBoundingClientRect();
-    };
     window.addEventListener("scroll", updateRect, { passive: true });
     window.addEventListener("resize", updateRect, { passive: true });
 
     const handlePointerMove = (e: PointerEvent) => {
+      const now = performance.now();
+      if (now - lastRectUpdate > 200) {
+        updateRect();
+      }
       mouseRef.current = {
         x: e.clientX - cachedRect.left,
         y: e.clientY - cachedRect.top,
@@ -314,17 +327,26 @@ export function TextParticle({
     };
 
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    container.addEventListener("pointerenter", updateRect, { passive: true });
     container.addEventListener("pointerleave", handlePointerLeave, { passive: true });
+
+    const t1 = setTimeout(updateRect, 500);
+    const t2 = setTimeout(updateRect, 1500);
+    const t3 = setTimeout(updateRect, 3000);
 
     return () => {
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
       }
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
       ro.disconnect();
       visibilityObserver.disconnect();
       window.removeEventListener("scroll", updateRect);
       window.removeEventListener("resize", updateRect);
       window.removeEventListener("pointermove", handlePointerMove);
+      container.removeEventListener("pointerenter", updateRect);
       container.removeEventListener("pointerleave", handlePointerLeave);
     };
   }, []);

@@ -21,6 +21,10 @@ function App() {
     // Ensure we are strictly at the top of the home page
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setIsLoading(false);
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('scroll'));
+    });
   };
 
   return (
@@ -48,6 +52,10 @@ function App() {
             scale: isLoading ? 0.985 : 1,
           }}
           transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
+          onAnimationComplete={() => {
+            window.dispatchEvent(new Event('resize'));
+            window.dispatchEvent(new Event('scroll'));
+          }}
         >
           <Home />
           <About />
